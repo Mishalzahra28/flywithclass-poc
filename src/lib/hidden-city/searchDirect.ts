@@ -1,7 +1,7 @@
 import Logger from '@/utils/logger';
 
 import { duffel } from './duffel';
-import { DirectResult, SearchParams } from './types';
+import { DirectOffer, DirectResult, SearchParams } from './types';
 
 export async function searchDirect(
   params: SearchParams
@@ -32,15 +32,23 @@ export async function searchDirect(
     return null;
   }
 
-  const cheapest = [...offers].sort(
+  const sortedOffers = [...offers].sort(
     (a, b) => parseFloat(a.total_amount) - parseFloat(b.total_amount)
-  )[0];
+  );
 
+  const allOffers: DirectOffer[] = sortedOffers.map((offer) => ({
+    price: offer.total_amount,
+    currency: offer.total_currency,
+    airline: offer.owner.name,
+  }));
+
+  const cheapest = sortedOffers[0];
   Logger.info(`[SearchDirect] Cheapest direct: ${cheapest.total_amount} ${cheapest.total_currency} (${cheapest.owner.name})`);
+  Logger.info(`[SearchDirect] Total airline options: ${allOffers.length}`);
 
   return {
     cheapest_price: cheapest.total_amount,
     currency: cheapest.total_currency,
-    airline: cheapest.owner.name,
+    offers: allOffers,
   };
 }

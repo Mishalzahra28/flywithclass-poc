@@ -4,10 +4,16 @@ export interface SearchParams {
   date: string;
 }
 
+export interface DirectOffer {
+  price: string;
+  currency: string;
+  airline: string;
+}
+
 export interface DirectResult {
   cheapest_price: string;
   currency: string;
-  airline: string;
+  offers: DirectOffer[];
 }
 
 export interface HiddenCityResult {

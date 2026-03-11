@@ -59,7 +59,9 @@ export async function runHiddenCitySearch(
   }
 
   const directPrice = parseFloat(directResult.cheapest_price);
-  Logger.info(`[Orchestrator] Direct flight found: ${directResult.cheapest_price} ${directResult.currency} (${directResult.airline})`);
+  const cheapestOffer = directResult.offers[0];
+  Logger.info(`[Orchestrator] Direct flight found: ${directResult.cheapest_price} ${directResult.currency} (${cheapestOffer.airline})`);
+  Logger.info(`[Orchestrator] Total direct flight options: ${directResult.offers.length}`);
 
   const candidates = getFilteredCandidates(params.origin, params.destination);
   Logger.info(`[Orchestrator] Retrieved ${candidates.length} candidate cities to search`);
