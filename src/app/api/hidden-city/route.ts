@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 
 import { runHiddenCitySearch } from '@/lib/hidden-city/orchestrator';
+import Logger from '@/utils/logger';
 
 function isValidFutureDate(value: string): boolean {
   const [yearRaw, monthRaw, dayRaw] = value.split('-');
@@ -63,6 +64,8 @@ const QuerySchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
+  Logger.info('[API] Hidden city search request received', request.nextUrl.searchParams.toString());
+
   try {
     const searchParams = request.nextUrl.searchParams;
 
@@ -70,6 +73,7 @@ export async function GET(request: NextRequest) {
     for (const key of requiredParams) {
       const value = searchParams.get(key);
       if (!value || value.trim().length === 0) {
+        Logger.warning('[API] Missing required parameter:', key);
         return NextResponse.json(
           {
             error: `Missing required parameter: ${key}`,
@@ -88,6 +92,7 @@ export async function GET(request: NextRequest) {
 
     const validation = QuerySchema.safeParse(rawParams);
     if (!validation.success) {
+      Logger.warning('[API] Validation failed:', validation.error.issues);
       return NextResponse.json(
         {
           error: validation.error.issues[0]?.message ?? 'Invalid query parameters',
@@ -98,7 +103,10 @@ export async function GET(request: NextRequest) {
     }
 
     const params = validation.data;
+    Logger.info('[API] Validated params:', params);
+
     if (params.origin === params.destination) {
+      Logger.warning('[API] Origin and destination are the same:', params.origin);
       return NextResponse.json(
         {
           error: 'Origin and destination cannot be the same',
@@ -108,10 +116,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    Logger.info('[API] Starting hidden city search...');
     const result = await runHiddenCitySearch(params);
+    Logger.success('[API] Search completed successfully', {
+      candidatesChecked: result.candidates_checked,
+      hiddenCitiesFound: result.hidden_cities_found,
+      searchTimeMs: result.search_time_ms,
+    });
+
     return NextResponse.json(result, { status: 200 });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
+    Logger.error('[API] Search failed:', message);
     return NextResponse.json(
       {
         error: message,

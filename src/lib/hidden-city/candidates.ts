@@ -1,3 +1,5 @@
+import Logger from '@/utils/logger';
+
 import { CandidateCity } from './types';
 
 export const CANDIDATE_CITIES: CandidateCity[] = [
@@ -32,7 +34,13 @@ export function getFilteredCandidates(
   origin: string,
   destination: string
 ): CandidateCity[] {
-  return CANDIDATE_CITIES.filter(
+  Logger.info(`[Candidates] Filtering candidates excluding ${origin} and ${destination}`);
+
+  const filtered = CANDIDATE_CITIES.filter(
     (candidate) => candidate.code !== origin && candidate.code !== destination
   );
+
+  Logger.info(`[Candidates] ${filtered.length} candidates available (excluded ${CANDIDATE_CITIES.length - filtered.length})`);
+
+  return filtered;
 }
